@@ -1,6 +1,6 @@
 # 🛺 TukVerify — Biometric Ride-Hailing Security
 
-> A middleware SaaS layer that closes the identity gap between registered drivers and every ride they take — for any platform, anywhere.
+A middleware SaaS layer that closes the identity gap between registered drivers and every ride they take — for any platform, anywhere.
 
 Powered by the **SOBA Network** (Zero-Knowledge Biometric Proofs), TukVerify integrates with existing ride-hailing platforms (PickMe, Uber, inDrive) to enforce continuous, privacy-preserving identity verification.
 
