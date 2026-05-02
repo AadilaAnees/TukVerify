@@ -7,8 +7,7 @@ import AdminPage from './pages/AdminPage';
 import PassengerPage from './pages/PassengerPage';
 import SobaCallbackPage from './pages/SobaCallbackPage';
 
-// Pages that don't use the sidebar layout
-const FULL_PAGE_ROUTES = ['/passenger'];
+const FULL_PAGE_ROUTES = ['/passenger', '/soba-callback'];
 
 export default function App() {
   const location = useLocation();
@@ -18,6 +17,7 @@ export default function App() {
     return (
       <Routes>
         <Route path="/passenger/:sessionId" element={<PassengerPage />} />
+        <Route path="/soba-callback" element={<SobaCallbackPage />} />
       </Routes>
     );
   }
@@ -31,7 +31,6 @@ export default function App() {
           <Route path="/enroll" element={<EnrollPage />} />
           <Route path="/driver" element={<DriverPage />} />
           <Route path="/admin" element={<AdminPage />} />
-          <Route path="/soba-callback" element={<SobaCallbackPage />} />
         </Routes>
       </main>
     </div>

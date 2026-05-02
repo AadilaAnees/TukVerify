@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 
 export default function DriverPage() {
@@ -11,42 +11,8 @@ export default function DriverPage() {
   const [driver, setDriver] = useState(null);
   const [reVerifying, setReVerifying] = useState(false);
   const [reVerifyResult, setReVerifyResult] = useState(null);
-  
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
 
-  // 🚨 NEW: Catch the driver coming back from the SOBA live scan
-  useEffect(() => {
-    const status = searchParams.get('status');
-    const returnedNic = searchParams.get('nic');
-
-    if (status === 'success' && returnedNic) {
-      setNic(returnedNic);
-      startLiveSession(returnedNic);
-      // Clean the URL so it doesn't loop if they refresh
-      setSearchParams({}); 
-    }
-  }, [searchParams, setSearchParams]);
-
-  // Helper function to actually create the session in the backend
-  async function startLiveSession(driverNic) {
-    setLoading(true);
-    setScanning(true);
-    try {
-      const d = await api.getDriver(driverNic);
-      setDriver(d.driver);
-      
-      const res = await api.startSession({ nic: driverNic });
-      setSession(res.session);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-      setScanning(false);
-    }
-  }
-
-  // 🚨 UPDATED: Now triggers the live redirect instead of simulating
   async function handleGoOnline(e) {
     e.preventDefault();
     if (!nic) { setError('Please enter your NIC number'); return; }
@@ -54,22 +20,21 @@ export default function DriverPage() {
     setLoading(true);
 
     try {
-      // 1. Ensure driver exists
-      await api.getDriver(nic); 
-
-      // 2. Ask backend for the Live SOBA Verification URL
-      const res = await fetch('http://localhost:5000/api/sessions/soba-url', {
+      // 1. V2 Route: Ask backend for the Live SOBA Verification URL
+      const res = await fetch('http://localhost:5000/api/drivers/verify-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nic })
       });
       const data = await res.json();
 
-      if (data.sobaRedirectUrl) {
-        // 3. Redirect the browser to the live SOBA face scan
-        window.location.href = data.sobaRedirectUrl; 
+      if (!res.ok) throw new Error(data.message || 'Error connecting to SOBA');
+
+      if (data.sobaVerifyUrl) {
+        // 2. Redirect the browser to the real SOBA camera!
+        window.location.href = data.sobaVerifyUrl; 
       } else {
-        setError("SOBA Verification URL is missing in the backend.");
+        setError("SOBA Verification URL is missing.");
         setLoading(false);
       }
     } catch (err) {

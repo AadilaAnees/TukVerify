@@ -20,6 +20,7 @@ export const api = {
   getDriver: (nic) => req(`/drivers/${nic}`),
   enrollDriver: (body) => req('/drivers/enroll', { method: 'POST', body }),
   confirmEnrollment: (body) => req('/drivers/enroll/confirm', { method: 'POST', body }),
+  getVerifyUrl: (body) => req('/drivers/verify-url', { method: 'POST', body }),
 
   // Sessions
   getSessions: () => req('/sessions'),
