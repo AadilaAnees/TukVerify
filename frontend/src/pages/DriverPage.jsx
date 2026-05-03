@@ -88,9 +88,8 @@ export default function DriverPage() {
 
             {/* Big verified status */}
             <div className={session.flagged ? 'unverified-block' : 'verified-block'} style={{ marginBottom: 24 }}>
-              <div className="verified-icon">{session.flagged ? '🚨' : '✅'}</div>
-              <div className={session.flagged ? 'unverified-title' : 'verified-title'}>
-                {session.flagged ? 'SESSION FLAGGED' : 'VERIFIED & ONLINE'}
+              <div className={session.flagged ? 'unverified-title' : 'verified-title'} style={{ fontSize: 22 }}>
+                {session.flagged ? 'Session flagged' : 'Verified & online'}
               </div>
               <div className="verified-sub">
                 {session.flagged
@@ -115,7 +114,7 @@ export default function DriverPage() {
                 ['NIC', driver?.nic],
                 ['License', driver?.license],
                 ['Vehicle', driver?.vehicle],
-                ['Rating', `⭐ ${driver?.rating}`],
+                ['Rating', `★ ${driver?.rating}`],
                 ['Session ID', session.sessionId.substring(0, 16) + '...'],
                 ['Rides This Session', session.rides?.length ?? 0],
                 ['Re-verifications', session.reVerifications?.length ?? 0],
@@ -144,22 +143,22 @@ export default function DriverPage() {
                     disabled={reVerifying}
                     style={{ flex: 1 }}
                   >
-                    {reVerifying ? <><span className="spinner" /> Scanning...</> : '🔐 Trigger Mid-Shift Re-verify'}
+                    {reVerifying ? <><span className="spinner" /> Scanning...</> : 'Trigger mid-shift re-verify'}
                   </button>
                   <button
                     className="btn btn-outline"
                     onClick={() => navigate(`/passenger/${session.sessionId}`)}
                     style={{ flex: 1 }}
                   >
-                    👁️ View Passenger Badge
+                    View passenger badge
                   </button>
                 </div>
 
                 {reVerifyResult && (
                   <div className={`alert ${reVerifyResult.verified ? 'alert-success' : 'alert-error'}`} style={{ marginTop: 16, marginBottom: 0 }}>
                     {reVerifyResult.verified
-                      ? '✅ Re-verification passed — same driver confirmed'
-                      : '🚨 Re-verification FAILED — identity mismatch. Session locked.'
+                      ? 'Re-verification passed — same driver confirmed'
+                      : 'Re-verification FAILED — identity mismatch. Session locked.'
                     }
                   </div>
                 )}
@@ -206,14 +205,13 @@ export default function DriverPage() {
               </p>
               <div className="scan-animation" style={{ marginBottom: 24 }}>
                 <div style={{ textAlign: 'center', zIndex: 1 }}>
-                  <div style={{ fontSize: 72 }}>👤</div>
                   <div style={{ fontFamily: 'Space Mono', fontSize: 12, color: 'var(--soba)', marginTop: 8 }}>
                     AUTHENTICATING...
                   </div>
                 </div>
               </div>
               <div className="alert alert-info" style={{ marginBottom: 0 }}>
-                🔐 Zero Knowledge proof being generated. No face data will be stored.
+                Zero Knowledge proof being generated. No face data will be stored.
               </div>
             </div>
           ) : (
@@ -240,11 +238,11 @@ export default function DriverPage() {
                 </div>
 
                 <div className="alert alert-info" style={{ marginBottom: 20 }}>
-                  🔐 After submitting, SOBA will scan your face. You must match the registered driver profile to go online.
+                  After submitting, SOBA will scan your face. You must match the registered driver profile to go online.
                 </div>
 
                 <button className="btn btn-primary btn-lg" type="submit" disabled={loading}>
-                  {loading ? <><span className="spinner" /> Checking...</> : '🛺 Start SOBA Verification & Go Online'}
+                  {loading ? <><span className="spinner" /> Checking...</> : 'Start SOBA verification & go online'}
                 </button>
               </form>
             </div>

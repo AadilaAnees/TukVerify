@@ -85,9 +85,9 @@ export default function EnrollPage() {
                     Email Address * <span style={{ color: 'var(--soba)', fontSize: 11 }}>(SOBA identity key — unique per driver)</span>
                   </label>
                   <input className="form-input" type="email" placeholder="driver@example.com" value={form.email} onChange={e => set('email', e.target.value)} />
-                  <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 4 }}>
-                    ⓘ SOBA builds a unique face scan URL per email. No .env change needed for new drivers.
-                  </div>
+                  <p style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 6, lineHeight: 1.5 }}>
+                    SOBA builds a unique face scan URL per email. No .env change needed for new drivers.
+                  </p>
                 </div>
                 <div className="grid-2">
                   <div className="form-group">
@@ -134,22 +134,22 @@ export default function EnrollPage() {
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>Registering Driver</div>
                 <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--text-bright)' }}>{driver?.name}</div>
                 <div style={{ fontSize: 13, color: 'var(--text-dim)', marginTop: 4 }}>NIC: {driver?.nic} · {driver?.license}</div>
-                <div style={{ marginTop: 8 }}><span className="badge badge-soba">📧 {driver?.email}</span></div>
+                <div style={{ marginTop: 8 }}><span className="badge badge-soba">{driver?.email}</span></div>
               </div>
               <div className="alert alert-info" style={{ marginBottom: 20 }}>
-                <strong>🔐 What happens next:</strong> SOBA opens a secure face scan page with this driver's email embedded in the URL. SOBA creates a Zero Knowledge proof — no raw face data stored anywhere. After the scan, SOBA redirects back automatically.
+                <strong>What happens next:</strong> SOBA opens a secure face scan page with this driver's email embedded in the URL. SOBA creates a Zero Knowledge proof — no raw face data stored anywhere. After the scan, SOBA redirects back automatically.
               </div>
               {sobaUrl ? (
                 <>
-                  <div style={{ background: 'var(--dark)', borderRadius: 8, padding: 12, marginBottom: 16, border: '1px solid rgba(99,102,241,0.3)', wordBreak: 'break-all', fontSize: 11, fontFamily: 'Space Mono', color: 'var(--soba)' }}>
+                  <div style={{ background: 'var(--dark)', borderRadius: 8, padding: 12, marginBottom: 16, border: '1px solid rgba(129, 140, 248, 0.3)', wordBreak: 'break-all', fontSize: 11, fontFamily: 'Space Mono', color: 'var(--soba)' }}>
                     {sobaUrl}
                   </div>
-                  <button className="btn btn-soba btn-lg" onClick={handleOpenSoba}>🔐 Open SOBA Face Registration</button>
+                  <button type="button" className="btn btn-soba btn-lg" onClick={handleOpenSoba}>Open SOBA face registration</button>
                 </>
               ) : (
                 <>
-                  <div className="alert alert-error" style={{ marginBottom: 16 }}>⚠️ SOBA not configured — running demo mode</div>
-                  <button className="btn btn-primary btn-lg" onClick={handleOpenSoba}>✅ Simulate SOBA Enrollment (Demo)</button>
+                  <div className="alert alert-error" style={{ marginBottom: 16 }}>SOBA not configured — running demo mode</div>
+                  <button type="button" className="btn btn-primary btn-lg" onClick={handleOpenSoba}>Simulate SOBA enrollment (demo)</button>
                 </>
               )}
               <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-dim)', textAlign: 'center' }}>After scan, SOBA redirects back automatically</div>
@@ -159,12 +159,11 @@ export default function EnrollPage() {
           {step === 2 && (
             <div>
               <div className="verified-block" style={{ marginBottom: 20 }}>
-                <div className="verified-icon">✅</div>
-                <div className="verified-title">Driver Enrolled!</div>
-                <div className="verified-sub">SOBA biometric registration complete</div>
+                <div className="verified-title" style={{ fontSize: 22 }}>Driver enrolled</div>
+                <div className="verified-sub" style={{ marginTop: 8 }}>SOBA biometric registration complete</div>
               </div>
               <div className="card">
-                {[['Name', driver?.name], ['Email', driver?.email], ['NIC', driver?.nic], ['License', driver?.license], ['Vehicle', driver?.vehicle], ['SOBA Status', '✅ Face Registered']].map(([k, v]) => (
+                {[['Name', driver?.name], ['Email', driver?.email], ['NIC', driver?.nic], ['License', driver?.license], ['Vehicle', driver?.vehicle], ['SOBA Status', 'Face Registered']].map(([k, v]) => (
                   <div key={k} className="flex-between" style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
                     <span style={{ fontSize: 13, color: 'var(--text-dim)' }}>{k}</span>
                     <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-bright)' }}>{v}</span>

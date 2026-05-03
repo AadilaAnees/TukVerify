@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
-
 export default function AdminPage() {
   const [sessions, setSessions] = useState([]);
   const [drivers, setDrivers] = useState([]);
@@ -9,6 +8,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('sessions');
   const [reVerifying, setReVerifying] = useState({});
+  const [deleteTarget, setDeleteTarget] = useState(null); // { nic, name }
+  const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
 
   const load = () => {
@@ -46,6 +47,22 @@ export default function AdminPage() {
     load();
   }
 
+  // ── NEW: delete driver ──────────────────────────────────────
+  async function handleDeleteDriver() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await api.deleteDriver(deleteTarget.nic);
+      setDeleteTarget(null);
+      load();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeleting(false);
+    }
+  }
+  // ────────────────────────────────────────────────────────────
+
   if (loading) return (
     <div style={{ padding: '40px', textAlign: 'center' }}>
       <div className="spinner" style={{ width: 32, height: 32, borderColor: 'var(--border)', borderTopColor: 'var(--green)' }} />
@@ -54,6 +71,49 @@ export default function AdminPage() {
 
   return (
     <div className="page-enter">
+
+      {/* ── Delete confirmation modal ─────────────────────────── */}
+      {deleteTarget && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div className="card" style={{ width: 360, padding: '28px 28px 24px' }}>
+            <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-bright)', marginBottom: 8 }}>
+              Delete driver?
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text-dim)', lineHeight: 1.6, marginBottom: 24 }}>
+              <strong style={{ color: 'var(--text-bright)' }}>{deleteTarget.name}</strong>{' '}
+              ({deleteTarget.nic}) will be permanently removed from the platform.
+              Any active sessions must be ended first. This cannot be undone.
+            </p>
+
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-outline"
+                style={{ padding: '8px 18px', fontSize: 13 }}
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                style={{ padding: '8px 18px', fontSize: 13 }}
+                onClick={handleDeleteDriver}
+                disabled={deleting}
+              >
+                {deleting
+                  ? <span className="spinner" style={{ width: 12, height: 12 }} />
+                  : 'Delete driver'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ──────────────────────────────────────────────────────── */}
+
       <div className="page-header">
         <div className="flex-between">
           <div>
@@ -62,7 +122,7 @@ export default function AdminPage() {
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span className="badge badge-green"><span className="pulse-dot" style={{ width: 6, height: 6 }} /> Live</span>
-            <button className="btn btn-outline" style={{ padding: '8px 16px', fontSize: 13 }} onClick={load}>↻ Refresh</button>
+            <button className="btn btn-outline" style={{ padding: '8px 16px', fontSize: 13 }} onClick={load}>Refresh</button>
           </div>
         </div>
       </div>
@@ -86,20 +146,20 @@ export default function AdminPage() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'var(--dark)', padding: 4, borderRadius: 10, width: 'fit-content' }}>
-          {[['sessions', '📋 Sessions'], ['drivers', '🛺 Drivers']].map(([id, label]) => (
-            <button key={id} onClick={() => setTab(id)} style={{
-              padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
-              background: tab === id ? 'var(--card)' : 'transparent',
-              color: tab === id ? 'var(--text-bright)' : 'var(--text-dim)',
-              fontFamily: 'Syne', fontWeight: 700, fontSize: 14, transition: 'all 0.15s'
-            }}>
+        <div className="segmented-control" style={{ marginBottom: 20 }}>
+          {[['sessions', 'Sessions'], ['drivers', 'Drivers']].map(([id, label]) => (
+            <button
+              type="button"
+              key={id}
+              className={tab === id ? 'segmented-control__active' : ''}
+              onClick={() => setTab(id)}
+            >
               {label}
             </button>
           ))}
         </div>
 
-        {/* Sessions Table */}
+        {/* Sessions Table — unchanged */}
         {tab === 'sessions' && (
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
@@ -108,24 +168,19 @@ export default function AdminPage() {
               </div>
             </div>
             {sessions.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-dim)' }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-                <div>No sessions yet. <button className="btn btn-outline" style={{ padding: '6px 14px', fontSize: 13, marginLeft: 8 }} onClick={() => navigate('/driver')}>Start one →</button></div>
+              <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-dim)', fontSize: 14 }}>
+                No sessions yet.
+                <button type="button" className="btn btn-outline" style={{ padding: '6px 14px', fontSize: 13, marginLeft: 8 }} onClick={() => navigate('/driver')}>
+                  Start session
+                </button>
               </div>
             ) : (
               <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>Driver</th>
-                      <th>NIC</th>
-                      <th>Status</th>
-                      <th>Started</th>
-                      <th>Ended</th>
-                      <th>Rides</th>
-                      <th>Re-verifs</th>
-                      <th>ZK Proof</th>
-                      <th>Actions</th>
+                      <th>Driver</th><th>NIC</th><th>Status</th><th>Started</th>
+                      <th>Ended</th><th>Rides</th><th>Re-verifs</th><th>ZK Proof</th><th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -135,51 +190,26 @@ export default function AdminPage() {
                         <td><span className="mono" style={{ fontSize: 12 }}>{s.driverId}</span></td>
                         <td>
                           {s.flagged
-                            ? <span className="badge badge-red">🚨 Flagged</span>
+                            ? <span className="badge badge-red">Flagged</span>
                             : s.active
                               ? <span className="badge badge-green"><span className="pulse-dot" style={{ width: 6, height: 6 }} /> Active</span>
                               : <span className="badge" style={{ background: 'var(--muted)', color: 'var(--text-dim)' }}>Ended</span>
                           }
                         </td>
-                        <td style={{ fontSize: 12, color: 'var(--text-dim)', fontFamily: 'Space Mono' }}>
-                          {new Date(s.startedAt).toLocaleTimeString()}
-                        </td>
-                        <td style={{ fontSize: 12, color: 'var(--text-dim)', fontFamily: 'Space Mono' }}>
-                          {s.endedAt ? new Date(s.endedAt).toLocaleTimeString() : '—'}
-                        </td>
+                        <td style={{ fontSize: 12, color: 'var(--text-dim)', fontFamily: 'Space Mono' }}>{new Date(s.startedAt).toLocaleTimeString()}</td>
+                        <td style={{ fontSize: 12, color: 'var(--text-dim)', fontFamily: 'Space Mono' }}>{s.endedAt ? new Date(s.endedAt).toLocaleTimeString() : '—'}</td>
                         <td style={{ fontFamily: 'Space Mono', textAlign: 'center' }}>{s.rides?.length ?? 0}</td>
                         <td style={{ fontFamily: 'Space Mono', textAlign: 'center' }}>{s.reVerifications?.length ?? 0}</td>
-                        <td>
-                          <span className="badge badge-soba" style={{ fontSize: 10 }}>
-                            {s.zkProof?.substring(0, 14)}...
-                          </span>
-                        </td>
+                        <td><span className="badge badge-soba" style={{ fontSize: 10 }}>{s.zkProof?.substring(0, 14)}...</span></td>
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
-                            <button
-                              className="btn btn-outline"
-                              style={{ padding: '4px 10px', fontSize: 11 }}
-                              onClick={() => navigate(`/passenger/${s.sessionId}`)}
-                            >
-                              View
-                            </button>
+                            <button className="btn btn-outline" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => navigate(`/passenger/${s.sessionId}`)}>View</button>
                             {s.active && !s.flagged && (
                               <>
-                                <button
-                                  className="btn btn-soba"
-                                  style={{ padding: '4px 10px', fontSize: 11 }}
-                                  onClick={() => handleReVerify(s.sessionId)}
-                                  disabled={reVerifying[s.sessionId]}
-                                >
-                                  {reVerifying[s.sessionId] ? <span className="spinner" style={{ width: 10, height: 10 }} /> : '🔐'}
+                                <button className="btn btn-soba" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => handleReVerify(s.sessionId)} disabled={reVerifying[s.sessionId]}>
+                                  {reVerifying[s.sessionId] ? <span className="spinner" style={{ width: 10, height: 10 }} /> : 'Verify'}
                                 </button>
-                                <button
-                                  className="btn btn-danger"
-                                  style={{ padding: '4px 10px', fontSize: 11 }}
-                                  onClick={() => handleEndSession(s.sessionId)}
-                                >
-                                  End
-                                </button>
+                                <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => handleEndSession(s.sessionId)}>End</button>
                               </>
                             )}
                           </div>
@@ -193,7 +223,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Drivers Table */}
+        {/* Drivers Table — with Delete column added */}
         {tab === 'drivers' && (
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -205,8 +235,7 @@ export default function AdminPage() {
               </button>
             </div>
             {drivers.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-dim)' }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>🛺</div>
+              <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-dim)', fontSize: 14 }}>
                 No drivers enrolled yet.
               </div>
             ) : (
@@ -214,13 +243,9 @@ export default function AdminPage() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Name</th>
-                      <th>NIC</th>
-                      <th>License</th>
-                      <th>Vehicle</th>
-                      <th>SOBA Status</th>
-                      <th>Enrolled At</th>
-                      <th>Rating</th>
+                      <th>Name</th><th>NIC</th><th>License</th><th>Vehicle</th>
+                      <th>SOBA Status</th><th>Enrolled At</th><th>Rating</th>
+                      <th>Actions</th> {/* ← new column */}
                     </tr>
                   </thead>
                   <tbody>
@@ -232,14 +257,27 @@ export default function AdminPage() {
                         <td>{d.vehicle}</td>
                         <td>
                           {d.enrolled
-                            ? <span className="badge badge-green">✅ Enrolled</span>
-                            : <span className="badge badge-yellow">⏳ Pending</span>
+                            ? <span className="badge badge-green">Enrolled</span>
+                            : <span className="badge badge-yellow">Pending</span>
                           }
                         </td>
                         <td style={{ fontSize: 12, color: 'var(--text-dim)' }}>
                           {d.enrolledAt ? new Date(d.enrolledAt).toLocaleDateString() : '—'}
                         </td>
-                        <td>⭐ {d.rating}</td>
+                        <td>★ {d.rating}</td>
+
+                        {/* ── Delete button ── */}
+                        <td>
+                          <button
+                            className="btn btn-danger"
+                            style={{ padding: '4px 10px', fontSize: 11 }}
+                            onClick={() => setDeleteTarget({ nic: d.nic, name: d.name })}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                        {/* ───────────────── */}
+
                       </tr>
                     ))}
                   </tbody>
@@ -249,9 +287,8 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* SOBA Info box */}
         <div className="alert alert-info" style={{ marginTop: 24 }}>
-          🔐 <strong>SOBA ZK Protocol Active:</strong> All biometric verifications use Zero Knowledge proofs. No raw face data is stored on this platform or any server. Every verification creates a cryptographic proof tied to a session ID — PDPA 2022 compliant.
+          <strong>SOBA ZK Protocol Active:</strong> All biometric verifications use Zero Knowledge proofs. No raw face data is stored on this platform or any server. Every verification creates a cryptographic proof tied to a session ID — PDPA 2022 compliant.
         </div>
       </div>
     </div>

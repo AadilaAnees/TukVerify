@@ -23,15 +23,18 @@ export default function App() {
   }
 
   return (
-    <div className="app-layout">
+    <div className="app-layout app-shell">
       <Sidebar />
       <main className="main-content">
+        <div className="ambient-bg" aria-hidden="true" />
+        <div className="main-content-inner">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/enroll" element={<EnrollPage />} />
           <Route path="/driver" element={<DriverPage />} />
           <Route path="/admin" element={<AdminPage />} />
         </Routes>
+        </div>
       </main>
     </div>
   );
