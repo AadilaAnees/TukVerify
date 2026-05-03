@@ -6,7 +6,7 @@ Welcome to the TukVerify demo! You have two ways to evaluate this project: using
 
 We have fully deployed the project to Vercel and MongoDB Atlas. You do not need to install anything.
 
-1. **Visit the Live App:** `[Insert Your Vercel Link Here - e.g., https://tuk-verify.vercel.app]`
+1. **Visit the Live App:** `https://tuk-verify.vercel.app/`
 2. **Navigate to `+ Enroll Driver`** and register a new identity.
 3. **Important:** You *must* enter a real email address you have access to, as the SOBA Network requires email verification during the face scan.
 4. Follow the SOBA face-scan prompts. 
