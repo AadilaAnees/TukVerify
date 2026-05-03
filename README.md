@@ -45,21 +45,23 @@ A quick breakdown of the core views in the application:
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Integration & High-Level Architecture (Bird's Eye View)
+
+**Summary:** TukVerify acts as a security middleware that bridges existing ride-hailing platforms with the SOBA Network. When a driver signs up, TukVerify hands off the biometric enrollment to SOBA. SOBA generates a Zero-Knowledge (ZK) cryptographic proof of the driver's identity and returns a unique DID (Decentralized Identifier) to TukVerify. During daily operations, TukVerify triggers SOBA liveness checks before allowing the driver to start their shift. No raw facial data is ever stored on TukVerify servers — ensuring absolute privacy and compliance.
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
 │                      TUKVERIFY PLATFORM                     │
 ├──────────────────┬──────────────────┬───────────────────────┤
 │  React Frontend  │  Node.js Backend │     SOBA Network      │
-│  (Vite + React   │  (Express API)   │   (ZK Biometric)      │
-│   Router)        │                  │                       │
-│                  │  /api/drivers    │  • Face enrollment    │
-│  • Dashboard     │  /api/sessions   │  • Face verification  │
-│  • Enroll Driver │  /api/stats      │  • ZK proof gen       │
-│  • Driver Login  │                  │  • Liveness detect    │
-│  • Passenger View│  MongoDB Atlas   │                       │
-│  • Admin View    │  (Database)      │  Zero raw data stored │
+│  (Vite + Vercel) │  (Express + Vercel)│   (ZK Biometric)    │
+│                  │                  │                       │
+│  • Dashboard     │  /api/drivers    │  • Face enrollment    │
+│  • Enroll Driver │  /api/sessions   │  • Face verification  │
+│  • Driver Login  │  /api/stats      │  • ZK proof gen       │
+│  • Passenger View│                  │  • Liveness detect    │
+│  • Admin View    │  MongoDB Atlas   │                       │
+│                  │  (Database)      │  Zero raw data stored │
 │                  │                  │    on any server      │
 └──────────────────┴──────────────────┴───────────────────────┘
 ```
