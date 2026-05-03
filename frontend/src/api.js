@@ -1,4 +1,4 @@
-const BASE = '/api';
+const BASE = import.meta.env.PROD ? '/_/backend/api' : '/api';
 
 async function req(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, {
