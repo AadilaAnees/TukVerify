@@ -1,77 +1,75 @@
-// routes/soba.js
-// Handles all callbacks and webhooks FROM SOBA Network back to our server
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const Driver = require('../models/Driver');
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /api/soba/callback
-// SOBA redirects the user's BROWSER here after face scan completes.
-// Query params from SOBA (based on their dashboard):
-//   ?status=verified OR failed
-//   &email=<the driver email we passed>
-//   &ref=<our ref>
-//   &txid=<blockchain TX id>  ← the Registration TX shown in Event Users tab
-// ─────────────────────────────────────────────────────────────────────────────
-router.get('/callback', (req, res) => {
-  const { status, email, ref, txid, type, nic } = req.query;
+router.get('/callback', async (req, res) => {
+  try {
+    const { status, email, ref, txid, type, nic } = req.query;
+    console.log('[SOBA CALLBACK]', req.query);
 
-  console.log('[SOBA CALLBACK]', req.query);
+    const verified = status === 'verified' || status === 'success' || status === '1';
 
-  const verified = status === 'verified' || status === 'success' || status === '1';
+    if (type === 'register' || !type) {
+      let driver;
+      if (nic) {
+        driver = await Driver.findOne({ nic });
+      } else {
+        driver = await Driver.findOne({ email });
+      }
 
-  if (type === 'register' || !type) {
-    // Registration callback — mark driver as enrolled
-    // Find driver by email or nic
-    const driver = nic
-      ? db.getDriver(nic)
-      : Object.values(db.getAllDrivers()).find(d => d.email === email);
+      if (driver && verified) {
+        driver.enrolled = true;
+        driver.enrolledAt = new Date();
+        driver.sobaRegistrationId = txid || `soba_${Date.now()}`;
+        await driver.save();
+        console.log(`[SOBA CALLBACK] Driver ${driver.nic} enrolled. TX: ${driver.sobaRegistrationId}`);
+      }
 
-    if (driver && verified) {
-      db.markDriverEnrolled(driver.nic, txid || `soba_${Date.now()}`);
-      console.log(`[SOBA CALLBACK] Driver ${driver.nic} enrolled. TX: ${txid}`);
+      const redirectUrl = verified
+        ? `${process.env.FRONTEND_URL}/soba-callback?type=register&status=success&nic=${driver?.nic || ''}`
+        : `${process.env.FRONTEND_URL}/soba-callback?type=register&status=failed&nic=${driver?.nic || ''}`;
+
+      return res.redirect(redirectUrl);
     }
 
-    const redirectUrl = verified
-      ? `${process.env.FRONTEND_URL}/soba-callback?type=register&status=success&nic=${driver?.nic}`
-      : `${process.env.FRONTEND_URL}/soba-callback?type=register&status=failed&nic=${driver?.nic}`;
+    if (type === 'verify') {
+      const redirectUrl = verified
+        ? `${process.env.FRONTEND_URL}/soba-callback?type=verify&status=success&nic=${nic}`
+        : `${process.env.FRONTEND_URL}/soba-callback?type=verify&status=failed&nic=${nic}`;
 
-    return res.redirect(redirectUrl);
+      return res.redirect(redirectUrl);
+    }
+
+    res.redirect(`${process.env.FRONTEND_URL}/soba-callback?status=${status}`);
+  } catch (err) {
+    console.error('[SOBA CALLBACK ERROR]', err);
+    res.redirect(`${process.env.FRONTEND_URL}/soba-callback?status=error`);
   }
-
-  if (type === 'verify') {
-    // Verification callback — session will be started by frontend after this
-    const redirectUrl = verified
-      ? `${process.env.FRONTEND_URL}/soba-callback?type=verify&status=success&nic=${nic}`
-      : `${process.env.FRONTEND_URL}/soba-callback?type=verify&status=failed&nic=${nic}`;
-
-    return res.redirect(redirectUrl);
-  }
-
-  res.redirect(`${process.env.FRONTEND_URL}/soba-callback?status=${status}`);
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// POST /api/soba/webhook
-// SOBA calls this server-to-server when a verification event happens.
-// This is more reliable than the redirect callback.
-// ─────────────────────────────────────────────────────────────────────────────
-router.post('/webhook', (req, res) => {
-  const { status, email, txid, eventType } = req.body;
-  console.log('[SOBA WEBHOOK]', req.body);
+router.post('/webhook', async (req, res) => {
+  try {
+    const { status, email, txid, eventType } = req.body;
+    console.log('[SOBA WEBHOOK]', req.body);
 
-  const verified = status === 'verified' || status === 'success' || status === 1;
+    const verified = status === 'verified' || status === 'success' || status === 1;
 
-  if (verified && email) {
-    const driver = db.getAllDrivers().find(d => d.email === email);
-    if (driver) {
-      db.markDriverEnrolled(driver.nic, txid);
-      console.log(`[SOBA WEBHOOK] Auto-enrolled ${driver.nic} via webhook`);
+    if (verified && email) {
+      const driver = await Driver.findOne({ email });
+      if (driver) {
+        driver.enrolled = true;
+        driver.enrolledAt = new Date();
+        driver.sobaRegistrationId = txid || `soba_${Date.now()}`;
+        await driver.save();
+        console.log(`[SOBA WEBHOOK] Auto-enrolled ${driver.nic} via webhook`);
+      }
     }
-  }
 
-  // Always respond 200 so SOBA doesn't retry
-  res.json({ received: true, processed: true });
+    res.json({ received: true, processed: true });
+  } catch (err) {
+    console.error('[SOBA WEBHOOK ERROR]', err);
+    res.json({ received: true, error: true }); // Still return 200 so SOBA doesn't retry
+  }
 });
 
 module.exports = router;
