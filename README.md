@@ -146,7 +146,7 @@ PORT=5000
 FRONTEND_URL=http://localhost:5173
 
 # MongoDB Atlas Connection (Provided by team)
-MONGODB_URI=mongodb+srv://admin:YOUR_PASSWORD_HERE@cluster0.ytyr2yy.mongodb.net/?appName=Cluster0
+MONGODB_URI=<mongo_URI_connection>
 
 # SOBA Network Credentials
 SOBA_SESSION_ID=MTE0MDAwMXwyNzYwMDAxfHRlc3RAdHVrdmVyaWZ5LmNvbQ%3D%3D
