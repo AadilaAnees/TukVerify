@@ -21,14 +21,7 @@ export default function DriverPage() {
 
     try {
       // 1. V2 Route: Ask backend for the Live SOBA Verification URL
-      const res = await fetch('http://localhost:5000/api/drivers/verify-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nic })
-      });
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message || 'Error connecting to SOBA');
+      const data = await api.getVerifyUrl({ nic });
 
       if (data.sobaVerifyUrl) {
         // 2. Redirect the browser to the real SOBA camera!
